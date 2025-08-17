@@ -48,49 +48,53 @@ The ROM is initialized with the following hexadecimal values:
 
 The design consists of a single Verilog module. A `case` statement is used to model the ROM logic based on the input address. The output is registered using an `always @(posedge clk)` block to implement synchronous behavior.
 
-### Verilog Code (`rom_sync.v`)
+### Verilog Code (`ROM.v`)
 
 ```verilog
-module rom_sync (
-    input wire         clk,
-    input wire         enable,
-    input wire [3:0]   addr,
-    output reg [3:0]   dout
+`timescale 1ns/1ps
+`default_nettype none
+module rom_1r_sync #(
+parameter integer DEPTH = 16,
+parameter integer DATA_WIDTH =4,
+parameter integer ADDR_WIDTH =4
+)(
+input wire clk,
+input wire enable ,
+input wire [ADDR_WIDTH-1:0] addr,
+output reg [DATA_WIDTH-1:0] dout
 );
-
-    // Internal wire for combinational ROM output
-    wire [3:0] rom_data;
-
-    // Combinational logic for the ROM
-    // This part infers the LUTs
-    assign rom_data =
-           (addr == 4'h0) ? 4'ha :
-           (addr == 4'h1) ? 4'h1 :
-           (addr == 4'h2) ? 4'hc :
-           (addr == 4'h3) ? 4'he :
-           (addr == 4'h4) ? 4'h0 :
-           (addr == 4'h5) ? 4'h5 :
-           (addr == 4'h6) ? 4'h2 :
-           (addr == 4'h7) ? 4'hf :
-           (addr == 4'h8) ? 4'h7 :
-           (addr == 4'h9) ? 4'h9 :
-           (addr == 4'ha) ? 4'h3 :
-           (addr == 4'hb) ? 4'hb :
-           (addr == 4'hc) ? 4'h8 :
-           (addr == 4'hd) ? 4'h4 :
-           (addr == 4'he) ? 4'hd :
-           (addr == 4'hf) ? 4'h6 :
-           4'hX; // Default case
-
-    // Registered output
-    // This part infers the Flip-Flops (FDREs)
-    always @(posedge clk) begin
-        if (enable) begin
-            dout <= rom_data;
-        end
+reg [DATA_WIDTH-1:0] memory [0:DEPTH-1];
+initial begin 
+memory[ 0] = 4'hA;
+        memory[ 1] = 4'h1;
+        memory[ 2] = 4'hC;
+        memory[ 3] = 4'hE;
+        memory[ 4] = 4'h0;
+        memory[ 5] = 4'h5;
+        memory[ 6] = 4'h2;
+        memory[ 7] = 4'hF;
+        memory[ 8] = 4'h7;
+        memory[ 9] = 4'h9;
+        memory[10] = 4'h3;
+        memory[11] = 4'hB;
+        memory[12] = 4'h8;
+        memory[13] = 4'h4;
+        memory[14] = 4'hD;
+        memory[15] = 4'h6;
     end
-
-endmodule
+    always @(posedge clk) begin 
+    if(enable) begin 
+    dout<=memory[addr];
+    end 
+    end 
+    initial begin 
+    if(DEPTH != (1<<ADDR_WIDTH)) begin 
+    $display("WARNING: DEPTH (%0d) != 2^ADDR_WIDTH (%0d).",
+                     DEPTH, (1<<ADDR_WIDTH));
+                     end 
+                     end 
+                     endmodule 
+                     
 ```
 
 ### RTL Schematic
@@ -102,6 +106,120 @@ The elaborated RTL schematic clearly shows the high-level architecture: the comb
 ## 3\. Testbench & Verification
 
 A comprehensive testbench was written to verify the functionality of the ROM. It cycles through all 16 addresses and compares the `dout` signal with the expected value.
+
+### Testbench Code (`tb_rom_1r_sync.v`)
+```verilog
+`timescale 1ns/1ps
+`default_nettype none
+
+module tb_rom_1r_sync;
+    // Parameters must match DUT
+    localparam integer DEPTH      = 16;
+    localparam integer DATA_WIDTH = 4;
+    localparam integer ADDR_WIDTH = 4;
+
+    reg  clk;
+    reg  enable;
+    reg  [ADDR_WIDTH-1:0] addr;
+    wire [DATA_WIDTH-1:0] dout;
+
+    // Instantiate the DUT
+    rom_1r_sync #(
+        .DEPTH(DEPTH),
+        .DATA_WIDTH(DATA_WIDTH),
+        .ADDR_WIDTH(ADDR_WIDTH)
+    ) dut (
+        .clk(clk),
+        .enable(enable),
+        .addr(addr),
+        .dout(dout)
+    );
+
+    // Clock: 10ns period (100 MHz)
+    always #5 clk = ~clk;
+
+    // Reference ROM contents for checking
+    reg [DATA_WIDTH-1:0] expected [0:DEPTH-1];
+
+    integer i;
+    integer fails;
+
+    initial begin
+        $dumpfile("rom_1r_sync_tb.vcd");  // for GTKWave
+        $dumpvars(0, tb_rom_1r_sync);
+
+        // Init clock and inputs
+        clk    = 0;
+        enable = 1;
+        addr   = 0;
+        fails  = 0;
+
+        // Load expected values (must match DUT init block)
+        expected[ 0] = 4'hA;
+        expected[ 1] = 4'h1;
+        expected[ 2] = 4'hC;
+        expected[ 3] = 4'hE;
+        expected[ 4] = 4'h0;
+        expected[ 5] = 4'h5;
+        expected[ 6] = 4'h2;
+        expected[ 7] = 4'hF;
+        expected[ 8] = 4'h7;
+        expected[ 9] = 4'h9;
+        expected[10] = 4'h3;
+        expected[11] = 4'hB;
+        expected[12] = 4'h8;
+        expected[13] = 4'h4;
+        expected[14] = 4'hD;
+        expected[15] = 4'h6;
+
+        // Wait for reset settle
+        @(posedge clk);
+
+        // Pipeline warm-up: apply addr=0
+        addr <= 0;
+        @(posedge clk); // dout gets memory[0] here
+
+        // Sweep through all addresses
+        for (i = 1; i < DEPTH; i = i + 1) begin
+            // Check previous cycle output
+            if (dout !== expected[i-1]) begin
+                $display("FAIL: addr=%0d expected=%h got=%h at t=%0t",
+                         i-1, expected[i-1], dout, $time);
+                fails = fails + 1;
+            end else begin
+                $display("PASS: addr=%0d value=%h", i-1, dout);
+            end
+
+            // Next address
+            addr <= i[ADDR_WIDTH-1:0];
+            @(posedge clk);
+        end
+
+        // Final check for addr=15
+        if (dout !== expected[15]) begin
+            $display("FAIL: addr=15 expected=%h got=%h at t=%0t",
+                     expected[15], dout, $time);
+            fails = fails + 1;
+        end else begin
+            $display("PASS: addr=15 value=%h", dout);
+        end
+
+        // Final report
+        if (fails == 0) begin
+            $display("RESULT: ALL TESTS PASSED");
+        end else begin
+            $display("RESULT: %0d TEST(S) FAILED", fails);
+            $fatal(1);
+        end
+
+        $finish;
+    end
+endmodule
+
+`default_nettype wire
+
+```
+
 
 ### Simulation Waveform
 
