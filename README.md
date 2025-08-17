@@ -47,6 +47,8 @@ The ROM is initialized with the following hexadecimal values:
 ## 2\. RTL Design & Architecture
 
 The design consists of a single Verilog module. A `case` statement is used to model the ROM logic based on the input address. The output is registered using an `always @(posedge clk)` block to implement synchronous behavior.
+<img width="2048" height="2048" alt="diagram" src="https://github.com/user-attachments/assets/1ad1b4b6-a9ae-465f-a266-a40d824ccc43" />
+
 
 ### Verilog Code (`ROM.v`)
 
@@ -98,6 +100,11 @@ memory[ 0] = 4'hA;
 ```
 
 ### RTL Schematic
+Schematic
+<img width="1854" height="1168" alt="schematic" src="https://github.com/user-attachments/assets/64c39662-f353-4342-963d-aaf8fbac10a6" />
+
+<img width="1387" height="894" alt="detailed_schematic" src="https://github.com/user-attachments/assets/793df145-85a7-4360-a82f-f7ab4463db0b" />
+
 
 The elaborated RTL schematic clearly shows the high-level architecture: the combinational ROM block (`RTL_ROM`) feeding into the output register bank (`RTL_REG`).
 
@@ -222,6 +229,8 @@ endmodule
 
 
 ### Simulation Waveform
+<img width="1854" height="1168" alt="Testbench" src="https://github.com/user-attachments/assets/45d2c481-6619-4987-9266-3b92291763b5" />
+
 
 The simulation waveform confirms the synchronous behavior. The `dout` signal reflects the data corresponding to the `addr` from the *previous* clock cycle. For instance, when `addr` is `2`, `dout` is `1` (the data for `addr=1`).
 
@@ -241,8 +250,13 @@ This analysis demonstrates a key understanding of hardware timing and verificati
 ## 4\. Synthesis & Implementation
 
 The design was synthesized and implemented using **Xilinx Vivado 2021.1**, targeting the **xc7a50t** Artix-7 device.
+<img width="1854" height="1168" alt="implementation" src="https://github.com/user-attachments/assets/72ad2c25-b5d2-45c7-89d1-f353b3026760" />
+<img width="1854" height="1168" alt="TCL_Console" src="https://github.com/user-attachments/assets/774fed43-9662-4592-8428-7d39b0bcfd7b" />
+
 
 ### Synthesized Schematic
+<img width="1387" height="894" alt="detailed_schematic" src="https://github.com/user-attachments/assets/85022f77-8fa9-440f-9b11-6c2aa9077d78" />
+
 
 The post-synthesis schematic shows how the RTL code was mapped to the target FPGA's primitive components.
 
@@ -252,6 +266,9 @@ The post-synthesis schematic shows how the RTL code was mapped to the target FPG
   * **BUFG:** A Global Clock Buffer is used for the `clk` signal to ensure low-skew distribution across the FPGA fabric.
 
 ### Device Placement
+<img width="1854" height="1168" alt="synthesis" src="https://github.com/user-attachments/assets/17334010-a6c9-4c71-9307-01d92e35001e" />
+
+
 
 The post-implementation device view shows the physical placement of the synthesized logic onto the FPGA die.
 
@@ -260,6 +277,8 @@ The post-implementation device view shows the physical placement of the synthesi
 ## 5\. Post-Implementation Analysis
 
 ### 📊 Timing Analysis
+<img width="1854" height="1168" alt="timing" src="https://github.com/user-attachments/assets/5a5e30be-5c15-4f2f-9149-c8ee86dfbce3" />
+
 
 The design successfully met all timing constraints, as confirmed by the timing summary report.
 
@@ -271,6 +290,8 @@ The design successfully met all timing constraints, as confirmed by the timing s
 ### 🔌 Power Analysis
 
 A power analysis was performed on the implemented netlist.
+<img width="1854" height="1168" alt="power" src="https://github.com/user-attachments/assets/2a66c6de-c8b6-45bd-a80e-4c8181783573" />
+
 
   * **Total On-Chip Power:** 1.86 W
   * **Dynamic Power:** 1.786 W (96%)
