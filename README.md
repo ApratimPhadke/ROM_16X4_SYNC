@@ -9,17 +9,6 @@ This repository contains the complete design, verification, and implementation f
 [](https://www.xilinx.com/products/silicon-devices/fpga/artix-7.html)
 [](https://github.com/)
 
-## Table of Contents
-
-1.  [**Project Overview**](https://www.google.com/search?q=%231-project-overview)
-2.  [**RTL Design & Architecture**](https://www.google.com/search?q=%232-rtl-design--architecture)
-3.  [**Testbench & Verification**](https://www.google.com/search?q=%233-testbench--verification)
-4.  [**Synthesis & Implementation**](https://www.google.com/search?q=%234-synthesis--implementation)
-5.  [**Post-Implementation Analysis**](https://www.google.com/search?q=%235-post-implementation-analysis)
-6.  [**How to Run the Project**](https://www.google.com/search?q=%236-how-to-run-the-project)
-7.  [**Future Work**](https://www.google.com/search?q=%237-future-work)
-
------
 
 ## 1\. Project Overview
 
